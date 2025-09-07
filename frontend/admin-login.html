@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录 - 小馨宝-语音助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // CDN备用方案
+        if (typeof tailwind === 'undefined') {
+            document.write('\u003clink rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css">');
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pattern-bg {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group input:focus + label,
+        .input-group input:not(:placeholder-shown) + label {
+            transform: translateY(-25px) scale(0.85);
+            color: #6366f1;
+        }
+        
+        .floating-label {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            color: #6b7280;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            background: white;
+            padding: 0 4px;
+        }
+    </style>
+</head>
+<body class="pattern-bg">
+    <!-- 背景装饰 -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-20 left-10 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div class="absolute bottom-20 right-10 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- 登录容器 -->
+    <div class="login-container relative z-10">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md fade-in">
+            <!-- Logo和标题 -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full mb-4">
+                    <i class="fas fa-cog text-white text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">开发者控制台</h1>
+                <p class="text-gray-600 mt-2">请登录以继续</p>
+            </div>
+
+            <!-- 登录表单 -->
+            <form id="loginForm">
+                <!-- 用户名输入 -->
+                <div class="input-group mb-6">
+                    <input 
+                        type="text" 
+                        id="username" 
+                        placeholder=" "
+                        class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                    >
+                    <label for="username" class="floating-label">用户名</label>
+                    <i class="fas fa-user absolute right-3 top-3.5 text-gray-400"></i>
+                </div>
+
+                <!-- 密码输入 -->
+                <div class="input-group mb-6">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        placeholder=" "
+                        class="w-full px-3 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                    >
+                    <label for="password" class="floating-label">密码</label>
+                    <button 
+                        type="button" 
+                        data-password-toggle
+                        class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                    >
+                        <i id="passwordIcon" class="fas fa-eye"></i>
+                    </button>
+                </div>
+
+                <!-- 记住我 -->
+                <div class="flex items-center justify-between mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="remember" class="mr-2 rounded text-purple-600 focus:ring-purple-500">
+                        <span class="text-sm text-gray-600">记住我</span>
+                    </label>
+                    <a href="#" class="text-sm text-purple-600 hover:underline">忘记密码？</a>
+                </div>
+
+                <!-- 登录按钮 -->
+                <button 
+                    type="submit" 
+                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-3 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                >
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    登录
+                </button>
+            </form>
+
+            <!-- 其他选项 -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    还没有账号？
+                    <a href="#" data-show-register class="text-purple-600 hover:underline font-medium">立即注册</a>
+                </p>
+            </div>
+
+            <!-- 注册表单（默认隐藏） -->
+            <form id="registerForm" class="hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">注册新账号</h3>
+                
+                <!-- 注册用户名 -->
+                <div class="input-group mb-4">
+                    <input 
+                        type="text" 
+                        id="regUsername" 
+                        placeholder=" "
+                        class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                    >
+                    <label for="regUsername" class="floating-label">用户名</label>
+                </div>
+
+                <!-- 注册密码 -->
+                <div class="input-group mb-4">
+                    <input 
+                        type="password" 
+                        id="regPassword" 
+                        placeholder=" "
+                        class="w-full px-3 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                    >
+                    <label for="regPassword" class="floating-label">密码</label>
+                </div>
+
+                <!-- 确认密码 -->
+                <div class="input-group mb-6">
+                    <input 
+                        type="password" 
+                        id="confirmPassword" 
+                        placeholder=" "
+                        class="w-full px-3 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                    >
+                    <label for="confirmPassword" class="floating-label">确认密码</label>
+                </div>
+
+                <!-- 注册按钮 -->
+                <button 
+                    type="submit" 
+                    class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 mb-4"
+                >
+                    <i class="fas fa-user-plus mr-2"></i>
+                    注册
+                </button>
+
+                <!-- 返回登录 -->
+                <div class="text-center">
+                    <a href="#" data-show-login class="text-sm text-purple-600 hover:underline">
+                        <i class="fas fa-arrow-left mr-1"></i>
+                        返回登录
+                    </a>
+                </div>
+            </form>
+
+            <!-- 忘记密码表单（默认隐藏） -->
+            <form id="forgotPasswordForm" class="hidden">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 text-center">重置密码</h3>
+                
+                <!-- 用户名 -->
+                <div class="input-group mb-4">
+                    <input 
+                        type="text" 
+                        id="resetUsername" 
+                        placeholder=" "
+                        class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                    >
+                    <label for="resetUsername" class="floating-label">用户名</label>
+                </div>
+
+                <!-- 新密码 -->
+                <div class="input-group mb-4">
+                    <input 
+                        type="password" 
+                        id="newPassword" 
+                        placeholder=" "
+                        class="w-full px-3 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                    >
+                    <label for="newPassword" class="floating-label">新密码</label>
+                </div>
+
+                <!-- 确认新密码 -->
+                <div class="input-group mb-6">
+                    <input 
+                        type="password" 
+                        id="confirmNewPassword" 
+                        placeholder=" "
+                        class="w-full px-3 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
+                        required
+                    >
+                    <label for="confirmNewPassword" class="floating-label">确认新密码</label>
+                </div>
+
+                <!-- 重置密码按钮 -->
+                <button 
+                    type="submit" 
+                    class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 mb-4"
+                >
+                    <i class="fas fa-key mr-2"></i>
+                    重置密码
+                </button>
+
+                <!-- 返回登录 -->
+                <div class="text-center">
+                    <a href="#" data-show-login class="text-sm text-purple-600 hover:underline">
+                        <i class="fas fa-arrow-left mr-1"></i>
+                        返回登录
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeDefaultAdmin();
+            checkRememberedUser();
+            initializeEventListeners();
+        });
+
+        // 初始化默认管理员账户
+        function initializeDefaultAdmin() {
+            const storedUsers = JSON.parse(localStorage.getItem('adminUsers') || '[]');
+            
+            // 如果没有用户，创建默认管理员
+            if (storedUsers.length === 0) {
+                const defaultAdmin = {
+                    username: 'admin',
+                    password: simpleEncrypt('admin123'),
+                    email: 'admin@xiaoxinbao.com',
+                    role: 'administrator',
+                    createdAt: new Date().toISOString()
+                };
+                
+                localStorage.setItem('adminUsers', JSON.stringify([defaultAdmin]));
+                
+                // 显示提示
+                setTimeout(() => {
+                    showNotification('已创建默认管理员账户：admin / admin123', 'info');
+                }, 1000);
+            }
+        }
+
+        // 检查记住的用户
+        function checkRememberedUser() {
+            const rememberedUser = localStorage.getItem('rememberedUser');
+            if (rememberedUser) {
+                document.getElementById('username').value = rememberedUser;
+                document.getElementById('remember').checked = true;
+            }
+        }
+
+        // 初始化事件监听器
+        function initializeEventListeners() {
+            // 登录表单提交
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+            
+            // 注册表单提交
+            const registerForm = document.getElementById('registerForm');
+            if (registerForm) {
+                registerForm.addEventListener('submit', handleRegister);
+            }
+            
+            // 忘记密码表单提交
+            const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+            if (forgotPasswordForm) {
+                forgotPasswordForm.addEventListener('submit', handleForgotPassword);
+            }
+            
+            // 注册链接点击
+            const registerLink = document.querySelector('[data-show-register]');
+            if (registerLink) {
+                registerLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showRegisterForm();
+                });
+            }
+            
+            // 返回登录链接点击
+            const loginLink = document.querySelector('[data-show-login]');
+            if (loginLink) {
+                loginLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showLoginForm();
+                });
+            }
+            
+            // 忘记密码链接点击
+            const forgotPasswordLink = document.querySelector('a[href="#"]');
+            if (forgotPasswordLink && forgotPasswordLink.textContent.includes('忘记密码')) {
+                forgotPasswordLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showForgotPassword();
+                });
+            }
+            
+            // 密码可见性切换
+            const passwordToggle = document.querySelector('[data-password-toggle]');
+            if (passwordToggle) {
+                passwordToggle.addEventListener('click', togglePasswordVisibility);
+            }
+        }
+
+        // 简单的加密函数（实际项目中应使用更安全的方式）
+        function simpleEncrypt(text) {
+            return btoa(text); // Base64编码
+        }
+
+        function simpleDecrypt(encryptedText) {
+            try {
+                return atob(encryptedText); // Base64解码
+            } catch (e) {
+                return '';
+            }
+        }
+
+        // 切换密码可见性
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const passwordIcon = document.getElementById('passwordIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.classList.remove('fa-eye');
+                passwordIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.classList.remove('fa-eye-slash');
+                passwordIcon.classList.add('fa-eye');
+            }
+        }
+
+        // 显示注册表单
+        function showRegisterForm() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+        }
+
+        // 显示登录表单
+        function showLoginForm() {
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+        }
+        
+        // 显示忘记密码表单
+        function showForgotPassword() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').classList.remove('hidden');
+        }
+
+        // 处理登录
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            console.log('尝试登录:', username);
+            
+            // 从localStorage获取存储的用户信息
+            const storedUsers = JSON.parse(localStorage.getItem('adminUsers') || '[]');
+            console.log('存储的用户:', storedUsers);
+            
+            // 查找用户
+            const user = storedUsers.find(u => u.username === username);
+            
+            if (!user) {
+                console.log('用户不存在');
+                showNotification('用户名不存在', 'error');
+                return;
+            }
+            
+            // 验证密码
+            const decryptedPassword = simpleDecrypt(user.password);
+            console.log('验证密码:', decryptedPassword === password ? '成功' : '失败');
+            
+            if (decryptedPassword !== password) {
+                showNotification('密码错误', 'error');
+                return;
+            }
+            
+            // 登录成功
+            if (remember) {
+                localStorage.setItem('rememberedUser', username);
+            } else {
+                localStorage.removeItem('rememberedUser');
+            }
+            
+            // 设置登录状态
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
+            sessionStorage.setItem('adminUsername', username);
+            
+            showNotification('登录成功', 'success');
+            
+            // 跳转到控制台
+            setTimeout(() => {
+                window.location.href = 'admin-panel.html';
+            }, 1000);
+        }
+
+        // 处理注册
+        function handleRegister(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // 验证密码
+            if (password !== confirmPassword) {
+                showNotification('两次输入的密码不一致', 'error');
+                return;
+            }
+            
+            // 获取现有用户列表
+            const storedUsers = JSON.parse(localStorage.getItem('adminUsers') || '[]');
+            
+            // 检查用户名是否已存在
+            if (storedUsers.find(u => u.username === username)) {
+                showNotification('用户名已存在', 'error');
+                return;
+            }
+            
+            // 创建新用户
+            const newUser = {
+                username: username,
+                password: simpleEncrypt(password),
+                email: `${username}@xiaoxinbao.com`,
+                role: 'administrator',
+                createdAt: new Date().toISOString()
+            };
+            
+            // 添加到用户列表
+            storedUsers.push(newUser);
+            localStorage.setItem('adminUsers', JSON.stringify(storedUsers));
+            
+            showNotification('注册成功！请使用新账号登录', 'success');
+            
+            // 清空表单并返回登录页面
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            
+            setTimeout(() => {
+                showLoginForm();
+            }, 1500);
+        }
+
+        // 处理忘记密码
+        function handleForgotPassword(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('resetUsername').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            
+            // 验证密码
+            if (newPassword !== confirmNewPassword) {
+                showNotification('两次输入的新密码不一致', 'error');
+                return;
+            }
+            
+            // 获取现有用户列表
+            const storedUsers = JSON.parse(localStorage.getItem('adminUsers') || '[]');
+            
+            // 查找用户
+            const userIndex = storedUsers.findIndex(u => u.username === username);
+            
+            if (userIndex === -1) {
+                showNotification('用户名不存在', 'error');
+                return;
+            }
+            
+            // 更新密码
+            storedUsers[userIndex].password = simpleEncrypt(newPassword);
+            localStorage.setItem('adminUsers', JSON.stringify(storedUsers));
+            
+            showNotification('密码重置成功！请使用新密码登录', 'success');
+            
+            // 清空表单并返回登录页面
+            document.getElementById('resetUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+            
+            setTimeout(() => {
+                showLoginForm();
+            }, 1500);
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white fade-in ${
+                type === 'warning' ? 'bg-yellow-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+            }`;
+            
+            const iconClass = type === 'warning' ? 'fa-exclamation-triangle' : 
+                             type === 'error' ? 'fa-times-circle' : 
+                             type === 'success' ? 'fa-check-circle' : 'fa-info-circle';
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${iconClass} mr-2"></i>
+                    ${message}
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

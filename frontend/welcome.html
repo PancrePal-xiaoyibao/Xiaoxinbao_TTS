@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小馨宝-语音助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // CDN备用方案
+        if (typeof tailwind === 'undefined') {
+            document.write('\u003clink rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css">');
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .warm-gradient {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .heart-beat {
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            14% { transform: scale(1.3); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.3); }
+            70% { transform: scale(1); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 1.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-up {
+            animation: slideUp 1s ease-out 0.5s both;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .glow {
+            box-shadow: 0 0 20px rgba(245, 87, 108, 0.5);
+        }
+        
+        .pattern-bg {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+        }
+    </style>
+</head>
+<body class="min-h-screen pattern-bg">
+    <!-- 背景装饰元素 -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-20 left-10 w-64 h-64 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating"></div>
+        <div class="absolute top-40 right-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-20 left-1/2 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
+        <!-- 主容器 -->
+        <div class="max-w-4xl w-full text-center fade-in">
+            <!-- Logo区域 -->
+            <div class="mb-8">
+                <div class="inline-flex items-center justify-center w-32 h-32 bg-white rounded-full shadow-lg mb-6 glow">
+                    <i class="fas fa-heart text-6xl text-pink-500 heart-beat"></i>
+                </div>
+            </div>
+
+            <!-- 产品名称 -->
+            <h1 class="text-5xl md:text-7xl font-bold text-gray-800 mb-6 leading-tight">
+                <span class="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    小馨宝
+                </span>
+                <span class="text-gray-600">- 语音助手</span>
+            </h1>
+
+            <!-- 副标题 -->
+            <p class="text-xl md:text-2xl text-gray-600 mb-12 leading-relaxed max-w-3xl mx-auto slide-up">
+                国内首个面向癌症与罕见病患者的<br>
+                <span class="font-semibold text-purple-600">开源公益心理支持语音助手</span>
+            </p>
+
+            <!-- 特性介绍 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 slide-up" style="animation-delay: 0.8s;">
+                <div class="bg-white bg-opacity-80 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-comments text-2xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">24小时陪伴</h3>
+                    <p class="text-gray-600 text-sm">随时随地的倾听与陪伴，温暖每一个需要帮助的心灵</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-80 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-brain text-2xl text-pink-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">智能理解</h3>
+                    <p class="text-gray-600 text-sm">基于大语言模型，深度理解情感需求，提供贴心回应</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-80 backdrop-blur-sm rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-hands-helping text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">公益免费</h3>
+                    <p class="text-gray-600 text-sm">完全开源免费，致力于为患者提供无障碍心理支持</p>
+                </div>
+            </div>
+
+            <!-- 行动按钮 -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center slide-up" style="animation-delay: 1.2s;">
+                <button id="startUsingBtn" class="group relative px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
+                    <span class="relative z-10 flex items-center">
+                        <i class="fas fa-user mr-2"></i>
+                        开始使用
+                    </span>
+                    <div class="absolute inset-0 bg-gradient-to-r from-purple-700 to-pink-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </button>
+                
+                <button id="adminLoginBtn" class="group relative px-8 py-4 bg-white text-gray-700 font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border-2 border-purple-200 hover:border-purple-400 cursor-pointer">
+                    <span class="relative z-10 flex items-center">
+                        <i class="fas fa-cog mr-2"></i>
+                        开发者控制台
+                    </span>
+                </button>
+            </div>
+
+            <!-- 底部信息 -->
+            <div class="mt-16 text-gray-500 text-sm slide-up" style="animation-delay: 1.6s;">
+                <p class="mb-2">
+                    <i class="fas fa-heart text-pink-500 mr-1"></i>
+                    用科技传递温暖，用陪伴治愈心灵
+                </p>
+                <p>开源项目 · 公益免费 · 持续更新</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 浮动装饰元素 -->
+    <div class="fixed bottom-10 left-10 text-pink-400 opacity-20 pulse-slow">
+        <i class="fas fa-dove text-6xl"></i>
+    </div>
+    <div class="fixed top-20 right-10 text-purple-400 opacity-20 pulse-slow" style="animation-delay: 1s;">
+        <i class="fas fa-sun text-5xl"></i>
+    </div>
+    <div class="fixed bottom-20 right-20 text-blue-400 opacity-20 pulse-slow" style="animation-delay: 2s;">
+        <i class="fas fa-star text-4xl"></i>
+    </div>
+
+    <script src="cache-buster.js"></script>
+    <script>
+        // 添加一些交互效果
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('页面已加载，缓存版本：', new Date().toLocaleString());
+            
+            // 为爱心添加点击效果
+            const heart = document.querySelector('.heart-beat');
+            if (heart) {
+                heart.addEventListener('click', () => {
+                    heart.style.animation = 'none';
+                    setTimeout(() => {
+                        heart.style.animation = 'heartbeat 1.5s ease-in-out infinite';
+                    }, 10);
+                    
+                    // 创建爱心飘散效果
+                    createFloatingHearts();
+                });
+            }
+
+            // 绑定按钮点击事件
+            const startUsingBtn = document.getElementById('startUsingBtn');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+
+            if (startUsingBtn) {
+                startUsingBtn.addEventListener('click', navigateToUserAgreement);
+                console.log('开始使用按钮事件已绑定');
+            }
+
+            if (adminLoginBtn) {
+                adminLoginBtn.addEventListener('click', navigateToAdminLogin);
+                console.log('管理员登录按钮事件已绑定');
+            }
+        });
+
+        // 创建飘散的爱心
+        function createFloatingHearts() {
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.innerHTML = '<i class="fas fa-heart text-pink-400"></i>';
+                    heart.className = 'fixed pointer-events-none';
+                    heart.style.left = '50%';
+                    heart.style.top = '50%';
+                    heart.style.fontSize = Math.random() * 20 + 20 + 'px';
+                    heart.style.opacity = '0.8';
+                    heart.style.transform = 'translate(-50%, -50%)';
+                    heart.style.transition = 'all 2s ease-out';
+                    
+                    document.body.appendChild(heart);
+                    
+                    setTimeout(() => {
+                        const angle = (Math.PI * 2 * i) / 6;
+                        const distance = 100 + Math.random() * 100;
+                        heart.style.transform = `translate(calc(-50% + ${Math.cos(angle) * distance}px), calc(-50% + ${Math.sin(angle) * distance}px))`;
+                        heart.style.opacity = '0';
+                    }, 10);
+                    
+                    setTimeout(() => {
+                        heart.remove();
+                    }, 2000);
+                }, i * 100);
+            }
+        }
+
+        // 添加清除缓存按钮
+        function addCacheClearButton() {
+            const button = document.createElement('button');
+            button.textContent = '清除缓存';
+            button.className = 'fixed top-4 left-4 z-50 bg-blue-500 text-white px-3 py-1 rounded text-sm opacity-50 hover:opacity-100 transition-opacity';
+            button.addEventListener('click', clearBrowserCache);
+            document.body.appendChild(button);
+        }
+
+        // 开发模式下显示缓存清除按钮
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            addCacheClearButton();
+        }
+
+        // 导航函数 - 保持当前协议
+        function navigateToUserAgreement() {
+            const protocol = window.location.protocol;
+            const host = window.location.host;
+            const targetUrl = `${protocol}//${host}/user-agreement.html`;
+            console.log('导航到用户协议页面:', targetUrl);
+            window.location.href = targetUrl;
+        }
+
+        function navigateToAdminLogin() {
+            const protocol = window.location.protocol;
+            const host = window.location.host;
+            const targetUrl = `${protocol}//${host}/admin-login.html`;
+            console.log('导航到管理员登录页面:', targetUrl);
+            window.location.href = targetUrl;
+        }
+
+        // 清除浏览器缓存函数
+        function clearBrowserCache() {
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    for (let name of names) {
+                        caches.delete(name);
+                    }
+                });
+            }
+            
+            // 强制刷新页面
+            window.location.reload(true);
+        }
+    </script>
+</body>
+</html>

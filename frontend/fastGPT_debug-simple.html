@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简单调试页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">
+            <i class="fas fa-bug text-red-500 mr-2"></i>
+            简单调试页面
+        </h1>
+
+        <!-- 服务器连接测试 -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6
+            <h2 class=" text-lg font-semibold mb-4">第一步：测试服务器连接</h2>
+            <button id="testServerBtn" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                <i class="fas fa-heartbeat mr-2"></i>测试服务器连接
+            </button>
+            <div id="serverResult" class="mt-4 p-4 bg-gray-100 rounded text-sm min-h-16"></div>
+        </div>
+
+        <!-- 配置检查 -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">第二步：检查配置</h2>
+            <button id="checkConfigBtn" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                <i class="fas fa-cog mr-2"></i>检查配置
+            </button>
+            <div id="configResult" class="mt-4 p-4 bg-gray-100 rounded text-sm min-h-16"></div>
+        </div>
+
+        <!-- API测试 -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">第三步：测试API调用</h2>
+            <div class="mb-4">
+                <input type="text" id="testMessage" value="你好"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="输入测试消息">
+            </div>
+            <button id="testApiBtn" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600">
+                <i class="fas fa-play mr-2"></i>测试API调用
+            </button>
+            <div id="apiResult" class="mt-4 p-4 bg-gray-100 rounded text-sm min-h-16"></div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后设置事件监听器
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('简单调试页面加载完成');
+
+            // 设置事件监听器
+            document.getElementById('testServerBtn').addEventListener('click', testServer);
+            document.getElementById('checkConfigBtn').addEventListener('click', checkConfig);
+            document.getElementById('testApiBtn').addEventListener('click', testApi);
+        });
+
+        // 测试服务器连接
+        async function testServer() {
+            const resultDiv = document.getElementById('serverResult');
+            resultDiv.textContent = '正在测试服务器连接...';
+            resultDiv.style.color = 'black';
+
+            try {
+                console.log('开始测试服务器连接...');
+                const response = await fetch('/health');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.textContent = '✅ 服务器连接成功！\n\n' + JSON.stringify(data, null, 2);
+                    resultDiv.style.color = 'green';
+                    console.log('服务器连接成功:', data);
+                } else {
+                    resultDiv.textContent = '❌ 服务器响应异常\n状态码: ' + response.status;
+                    resultDiv.style.color = 'red';
+                }
+            } catch (error) {
+                console.error('服务器连接失败:', error);
+                resultDiv.textContent = '❌ 服务器连接失败\n\n错误信息: ' + error.message + '\n\n可能的原因:\n1. 服务器未启动\n2. 端口不正确\n3. 网络连接问题\n\n请检查服务器是否在运行: npm start';
+                resultDiv.style.color = 'red';
+            }
+        }
+
+        // 检查配置
+        function checkConfig() {
+            const resultDiv = document.getElementById('configResult');
+
+            try {
+                const savedConfig = localStorage.getItem('adminConfig');
+
+                if (!savedConfig) {
+                    resultDiv.textContent = '❌ 未找到保存的配置\n\n请先访问管理面板 (admin-panel.html) 配置并保存设置';
+                    resultDiv.style.color = 'red';
+                    return;
+                }
+
+                const config = JSON.parse(savedConfig);
+
+                // 检查必要的配置项
+                const requiredFields = ['provider', 'apiKey', 'baseUrl'];
+                const missingFields = requiredFields.filter(field => !config[field]);
+
+                if (missingFields.length > 0) {
+                    resultDiv.textContent = '❌ 配置不完整\n\n缺少字段: ' + missingFields.join(', ') + '\n\n完整配置:\n' + JSON.stringify(config, null, 2);
+                    resultDiv.style.color = 'red';
+                } else {
+                    resultDiv.textContent = '✅ 配置检查通过\n\n当前配置:\n' + JSON.stringify(config, null, 2);
+                    resultDiv.style.color = 'green';
+                }
+
+            } catch (error) {
+                resultDiv.textContent = '❌ 配置解析错误\n\n' + error.message;
+                resultDiv.style.color = 'red';
+            }
+        }
+
+        // 测试API调用
+        async function testApi() {
+            const resultDiv = document.getElementById('apiResult');
+            const message = document.getElementById('testMessage').value;
+
+            if (!message.trim()) {
+                resultDiv.textContent = '❌ 请输入测试消息';
+                resultDiv.style.color = 'red';
+                return;
+            }
+
+            resultDiv.textContent = '正在测试API调用...';
+            resultDiv.style.color = 'black';
+
+            try {
+                // 获取配置
+                const savedConfig = localStorage.getItem('adminConfig');
+                if (!savedConfig) {
+                    throw new Error('未找到配置，请先配置并保存');
+                }
+
+                const config = JSON.parse(savedConfig);
+
+                // 构建请求体
+                const requestBody = {
+                    message: message,
+                    provider: config.provider || 'fastgpt',
+                    model: config.modelName || 'fastgpt-3.5',
+                    apiKey: config.apiKey,
+                    baseUrl: config.baseUrl,
+                    chatId: config.chatId || '111'
+                };
+
+                console.log('发送API请求:', requestBody);
+
+                const startTime = Date.now();
+                const response = await fetch('/api/chat/completion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                const endTime = Date.now();
+
+                const data = await response.json();
+
+                const result = {
+                    success: response.ok,
+                    status: response.status,
+                    requestTime: `${endTime - startTime}ms`,
+                    request: requestBody,
+                    response: data
+                };
+
+                if (response.ok) {
+                    resultDiv.textContent = '✅ API调用成功！\n\n' + JSON.stringify(result, null, 2);
+                    resultDiv.style.color = 'green';
+                } else {
+                    resultDiv.textContent = '❌ API调用失败\n\n' + JSON.stringify(result, null, 2);
+                    resultDiv.style.color = 'red';
+                }
+
+            } catch (error) {
+                console.error('API调用错误:', error);
+                resultDiv.textContent = '❌ API调用异常\n\n错误: ' + error.message + '\n\n请先确保服务器连接正常';
+                resultDiv.style.color = 'red';
+            }
+        }
+    </script>
+</body>
+
+</html>

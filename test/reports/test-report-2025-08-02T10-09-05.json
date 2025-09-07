@@ -1,0 +1,14 @@
+{
+  "startTime": "2025-08-02T10:09:05.637Z",
+  "endTime": "2025-08-02T10:09:05.915Z",
+  "duration": 0.278,
+  "tests": [],
+  "errors": [],
+  "success": false,
+  "logs": {
+    "testLog": "E:\\Development\\Xiaoxinbao_TTS\\test\\logs\\test-run-2025-08-02T10-09-05.log",
+    "serverLog": "E:\\Development\\Xiaoxinbao_TTS\\test\\logs\\server-2025-08-02T10-09-05.log",
+    "portCleanerLog": "E:\\Development\\Xiaoxinbao_TTS\\test\\logs\\port-cleaner-2025-08-02T10-09-05.log",
+    "cacheCleanerLog": "E:\\Development\\Xiaoxinbao_TTS\\test\\logs\\cache-cleaner-2025-08-02T10-09-05.log"
+  }
+}

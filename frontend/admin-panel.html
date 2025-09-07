@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小馨宝-语音助手 - 开发者控制台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .config-card {
+            transition: all 0.3s ease;
+        }
+
+        .config-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .code-editor {
+            font-family: 'Consolas', 'Monaco', monospace;
+            tab-size: 2;
+        }
+
+        .notification {
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .provider-card {
+            transition: all 0.2s ease;
+        }
+
+        .provider-card:hover {
+            transform: scale(1.02);
+        }
+
+        .provider-card.active {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- 通知容器 -->
+    <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- 头部导航 -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <i class="fas fa-cog text-blue-500 text-2xl"></i>
+                    <h1 class="text-xl font-bold text-gray-800">开发者控制台</h1>
+                    <span class="text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded-full">小馨宝-语音助手</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-save mr-2"></i>保存所有配置
+                    </button>
+                    <button class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-undo mr-2"></i>重置
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 标签页导航 -->
+    <nav class="bg-white border-b sticky top-0 z-10">
+        <div class="container mx-auto px-4">
+            <div class="flex space-x-1">
+                <button
+                    class="tab-btn px-6 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600 transition-all active"
+                    data-tab="models">
+                    <i class="fas fa-brain mr-2"></i>模型配置
+                </button>
+                <button
+                    class="tab-btn px-6 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600 transition-all"
+                    data-tab="prompts">
+                    <i class="fas fa-comment-dots mr-2"></i>提示词配置
+                </button>
+                <button
+                    class="tab-btn px-6 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600 transition-all"
+                    data-tab="test">
+                    <i class="fas fa-flask mr-2"></i>测试面板
+                </button>
+                <button
+                    class="tab-btn px-6 py-3 text-sm font-medium text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600 transition-all"
+                    data-tab="logs">
+                    <i class="fas fa-history mr-2"></i>操作日志
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- 模型配置标签页 -->
+        <div id="models-tab" class="tab-content active">
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">选择模型供应商</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="provider-card cursor-pointer border-2 border-gray-200 rounded-lg p-4 text-center"
+                        data-provider="openai">
+                        <i class="fab fa-openai text-3xl text-gray-700 mb-2"></i>
+                        <h3 class="font-medium">OpenAI</h3>
+                        <p class="text-sm text-gray-500 mt-1">GPT-3.5, GPT-4</p>
+                    </div>
+                    <div class="provider-card cursor-pointer border-2 border-gray-200 rounded-lg p-4 text-center"
+                        data-provider="anthropic">
+                        <i class="fas fa-robot text-3xl text-gray-700 mb-2"></i>
+                        <h3 class="font-medium">Anthropic</h3>
+                        <p class="text-sm text-gray-500 mt-1">Claude 3</p>
+                    </div>
+                    <div class="provider-card cursor-pointer border-2 border-gray-200 rounded-lg p-4 text-center"
+                        data-provider="fastgpt">
+                        <i class="fas fa-bolt text-3xl text-yellow-500 mb-2"></i>
+                        <h3 class="font-medium">FastGPT</h3>
+                        <p class="text-sm text-gray-500 mt-1">私有化部署</p>
+                    </div>
+                    <div class="provider-card cursor-pointer border-2 border-gray-200 rounded-lg p-4 text-center"
+                        data-provider="custom">
+                        <i class="fas fa-cogs text-3xl text-gray-700 mb-2"></i>
+                        <h3 class="font-medium">自定义</h3>
+                        <p class="text-sm text-gray-500 mt-1">自定义接口</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 模型供应商配置 -->
+                <div class="config-card bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-server text-blue-500 mr-2"></i>
+                        模型供应商配置
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">供应商</label>
+                            <select id="provider"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="openai">OpenAI</option>
+                                <option value="anthropic">Anthropic</option>
+                                <option value="fastgpt">FastGPT</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                            <div class="relative">
+                                <input type="password" id="apiKey"
+                                    class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="输入你的API密钥">
+                                <button class="absolute right-2 top-2.5 text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
+                            <input type="url" id="baseUrl"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="https://api.siliconflow.cn" oninput="updateUrlPreview()">
+                            <p class="text-xs text-gray-500 mt-1">输入API的基础URL，系统会自动补全正确的端点路径</p>
+
+                            <!-- URL预览区域 -->
+                            <div id="urlPreview" class="mt-2 p-3 bg-gray-50 rounded-lg border hidden">
+                                <div class="text-xs font-medium text-gray-700 mb-2">API端点预览：</div>
+                                <div class="space-y-1 text-xs">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">聊天完成：</span>
+                                        <code id="chatUrl" class="text-blue-600 bg-white px-2 py-1 rounded"></code>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">模型列表：</span>
+                                        <code id="modelsUrl" class="text-green-600 bg-white px-2 py-1 rounded"></code>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- FastGPT 特有配置 -->
+                        <div id="fastgptConfig" class="hidden space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Chat ID</label>
+                                <input type="text" id="chatId"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="对话ID">
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded-lg">
+                                <p class="text-sm text-blue-700">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    FastGPT 需要提供 Chat ID 参数，用于关联对话上下文
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">模型名称</label>
+                            <div class="flex space-x-2">
+                                <select id="modelName"
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">选择模型</option>
+                                </select>
+                                <button id="refreshModels"
+                                    class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">点击刷新按钮从API获取可用模型列表</p>
+                        </div>
+
+                        <!-- 自定义模型配置 -->
+                        <div id="customModelConfig" class="hidden space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">自定义模型名称</label>
+                                <input type="text" id="customModelName"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="例如: my-custom-model">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">模型描述</label>
+                                <input type="text" id="customModelDesc"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="模型的功能描述">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">最大令牌数</label>
+                            <input type="number" id="maxTokens"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value="1000" min="1" max="32000">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">温度 (Temperature)</label>
+                            <input type="range" id="temperature" class="w-full" min="0" max="2" step="0.1" value="0.7">
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>0 (保守)</span>
+                                <span id="temperatureValue">0.7</span>
+                                <span>2 (创新)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TTS配置 -->
+                <div class="config-card bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-volume-up text-green-500 mr-2"></i>
+                        TTS语音配置
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">TTS供应商</label>
+                            <select id="ttsProvider"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="browser">浏览器内置</option>
+                                <option value="openai">OpenAI TTS</option>
+                                <option value="azure">Azure TTS</option>
+                                <option value="google">Google TTS</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                        </div>
+
+                        <!-- 自定义TTS配置 -->
+                        <div id="customTtsConfig" class="hidden space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">TTS API URL</label>
+                                <input type="url" id="customTtsUrl"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="https://api.example.com/tts">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                                <div class="relative">
+                                    <input type="password" id="customTtsKey"
+                                        class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        placeholder="输入TTS API密钥">
+                                    <button class="absolute right-2 top-2.5 text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded-lg">
+                                <p class="text-sm text-green-700">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    自定义TTS需要提供API URL和密钥，接口应返回音频文件或音频流
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">语音</label>
+                            <select id="voice"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="default">默认</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">语速</label>
+                            <input type="range" id="speechRate" class="w-full" min="0.5" max="2" step="0.1" value="1"
+                                oninput="updateSpeechRateValue(this.value)">
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>0.5x</span>
+                                <span id="speechRateValue">1x</span>
+                                <span>2x</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">音调</label>
+                            <input type="range" id="pitch" class="w-full" min="0" max="2" step="0.1" value="1"
+                                oninput="updatePitchValue(this.value)">
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>低</span>
+                                <span id="pitchValue">正常</span>
+                                <span>高</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">语言</label>
+                            <select id="language"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="zh-CN">中文（简体）</option>
+                                <option value="zh-TW">中文（繁体）</option>
+                                <option value="en-US">英语（美国）</option>
+                                <option value="ja-JP">日语</option>
+                                <option value="ko-KR">韩语</option>
+                            </select>
+                        </div>
+
+                        <button
+                            class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg transition-colors">
+                            <i class="fas fa-play mr-2"></i>测试语音
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 提示词配置标签页 -->
+        <div id="prompts-tab" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 角色列表 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold flex items-center">
+                            <i class="fas fa-users text-purple-500 mr-2"></i>
+                            角色管理
+                        </h2>
+                        <button class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <div id="rolesList" class="space-y-2">
+                        <!-- 角色列表将在这里动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 角色编辑器 -->
+                <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-edit text-orange-500 mr-2"></i>
+                        角色编辑器
+                    </h2>
+
+                    <div id="roleEditor" class="space-y-4">
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="fas fa-hand-pointer text-4xl mb-2"></i>
+                            <p>请选择一个角色进行编辑</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 测试面板标签页 -->
+        <div id="test-tab" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 测试输入 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-terminal text-indigo-500 mr-2"></i>
+                        测试输入
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">选择角色</label>
+                            <select id="testRole"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">选择测试角色</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">输入消息</label>
+                            <textarea id="testInput" rows="4"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="输入测试消息..."></textarea>
+                        </div>
+
+                        <button id="runTestBtn"
+                            class="w-full bg-indigo-500 text-white py-2 px-4 rounded-lg hover:bg-indigo-600 transition-colors">
+                            <i class="fas fa-play mr-2"></i>运行测试
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 测试结果 -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center">
+                        <i class="fas fa-chart-line text-green-500 mr-2"></i>
+                        测试结果
+                    </h2>
+
+                    <div id="testResults" class="space-y-2">
+                        <div class="text-gray-500 text-center py-8">
+                            <i class="fas fa-flask text-4xl mb-2"></i>
+                            <p>运行测试后显示结果</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- 通知容器 -->
+        <div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+        <script>
+            // 页面加载时检查管理员权限
+            document.addEventListener('DOMContentLoaded', () => {
+                checkAdminAuth();
+                initializeAdminPanel();
+                initializeEventListeners();
+            });
+
+            // 初始化事件监听器
+            function initializeEventListeners() {
+                // 保存所有配置按钮
+                const saveAllBtn = document.querySelector('button:has(.fa-save)');
+                if (saveAllBtn) {
+                    saveAllBtn.addEventListener('click', saveAllConfigs);
+                }
+
+                // 重置配置按钮
+                const resetBtn = document.querySelector('button:has(.fa-undo)');
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', resetConfigs);
+                }
+
+                // 标签页切换按钮
+                const tabButtons = document.querySelectorAll('.tab-btn');
+                tabButtons.forEach(button => {
+                    const targetTab = button.getAttribute('data-tab');
+                    if (targetTab) {
+                        button.addEventListener('click', () => switchTab(targetTab));
+                    }
+                });
+
+                // 提供商选择卡片
+                const providerCards = document.querySelectorAll('.provider-card');
+                providerCards.forEach(card => {
+                    const provider = card.getAttribute('data-provider');
+                    if (provider) {
+                        card.addEventListener('click', () => selectProvider(provider));
+                    }
+                });
+
+                // 密码可见性切换按钮
+                const passwordToggles = document.querySelectorAll('button:has(.fa-eye)');
+                passwordToggles.forEach(button => {
+                    button.addEventListener('click', function () {
+                        const input = this.previousElementSibling;
+                        if (input && input.type === 'password') {
+                            input.type = 'text';
+                            this.querySelector('i').classList.remove('fa-eye');
+                            this.querySelector('i').classList.add('fa-eye-slash');
+                        } else if (input && input.type === 'text') {
+                            input.type = 'password';
+                            this.querySelector('i').classList.remove('fa-eye-slash');
+                            this.querySelector('i').classList.add('fa-eye');
+                        }
+                    });
+                });
+
+                // TTS测试按钮
+                const testTtsBtn = document.querySelector('button:has(.fa-play)');
+                if (testTtsBtn && testTtsBtn.textContent.includes('测试语音')) {
+                    testTtsBtn.addEventListener('click', testTTS);
+                }
+
+                // 添加新角色按钮
+                const addRoleBtn = document.querySelector('button:has(.fa-plus)');
+                if (addRoleBtn) {
+                    addRoleBtn.addEventListener('click', addNewRole);
+                }
+
+                // 运行测试按钮 - 使用ID选择器
+                const runTestBtn = document.getElementById('runTestBtn');
+                if (runTestBtn) {
+                    runTestBtn.addEventListener('click', runTest);
+                }
+
+                // 刷新模型按钮
+                const refreshModelsBtn = document.getElementById('refreshModels');
+                if (refreshModelsBtn) {
+                    refreshModelsBtn.addEventListener('click', fetchAvailableModels);
+                }
+
+                // 供应商选择下拉框
+                const providerSelect = document.getElementById('provider');
+                if (providerSelect) {
+                    providerSelect.addEventListener('change', function () {
+                        updateProviderConfig();
+                        updateUrlPreview();
+                    });
+                }
+                
+                // API密钥输入框 - 添加自动获取模型功能
+                const apiKeyInput = document.getElementById('apiKey');
+                if (apiKeyInput) {
+                    let apiKeyTimeout;
+                    apiKeyInput.addEventListener('input', function() {
+                        // 清除之前的定时器
+                        clearTimeout(apiKeyTimeout);
+                        
+                        // 延迟1秒后自动尝试获取模型列表
+                        apiKeyTimeout = setTimeout(() => {
+                            const provider = document.getElementById('provider').value;
+                            const apiKey = this.value.trim();
+                            
+                            if (apiKey && provider && provider !== 'custom') {
+                                autoFetchModels();
+                            }
+                        }, 1000);
+                    });
+                }
+                
+                // Base URL输入框 - 添加自动获取模型功能
+                const baseUrlInput = document.getElementById('baseUrl');
+                if (baseUrlInput) {
+                    let baseUrlTimeout;
+                    baseUrlInput.addEventListener('input', function() {
+                        updateUrlPreview();
+                        
+                        // 清除之前的定时器
+                        clearTimeout(baseUrlTimeout);
+                        
+                        // 延迟1.5秒后自动尝试获取模型列表（给用户更多时间输入完整URL）
+                        baseUrlTimeout = setTimeout(() => {
+                            const provider = document.getElementById('provider').value;
+                            const apiKey = document.getElementById('apiKey').value.trim();
+                            const baseUrl = this.value.trim();
+                            
+                            if (apiKey && baseUrl && provider === 'custom') {
+                                autoFetchModels();
+                            }
+                        }, 1500);
+                    });
+                }
+
+                // TTS供应商选择下拉框
+                const ttsProviderSelect = document.getElementById('ttsProvider');
+                if (ttsProviderSelect) {
+                    ttsProviderSelect.addEventListener('change', updateTTSConfig);
+                }
+
+                // 温度滑块
+                const temperatureSlider = document.getElementById('temperature');
+                const temperatureValue = document.getElementById('temperatureValue');
+                if (temperatureSlider && temperatureValue) {
+                    temperatureSlider.addEventListener('input', function () {
+                        temperatureValue.textContent = this.value;
+                    });
+                }
+
+                // 动态生成的按钮事件监听器
+                setupDynamicEventListeners();
+            }
+
+            // 设置动态生成元素的事件监听器
+            function setupDynamicEventListeners() {
+                // 保存角色按钮
+                const saveRoleBtn = document.querySelector('.save-role-btn');
+                if (saveRoleBtn) {
+                    saveRoleBtn.addEventListener('click', function () {
+                        const roleId = this.getAttribute('data-role-id');
+                        saveRole(roleId);
+                    });
+                }
+
+                // 取消编辑按钮
+                const cancelEditBtn = document.querySelector('.cancel-edit-btn');
+                if (cancelEditBtn) {
+                    cancelEditBtn.addEventListener('click', cancelEdit);
+                }
+            }
+
+            // 检查管理员认证
+            function checkAdminAuth() {
+                const isLoggedIn = sessionStorage.getItem('isAdminLoggedIn');
+                const username = sessionStorage.getItem('adminUsername');
+
+                if (!isLoggedIn || !username) {
+                    showNotification('请先登录', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'admin-login.html';
+                    }, 1500);
+                    return;
+                }
+
+                // 显示欢迎信息
+                showNotification(`欢迎回来，${username}！`, 'success');
+            }
+
+            // 初始化管理面板
+            function initializeAdminPanel() {
+                // 初始化标签页切换
+                const tabButtons = document.querySelectorAll('.tab-btn');
+                const tabContents = document.querySelectorAll('.tab-content');
+
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const targetTab = button.getAttribute('data-tab');
+
+                        // 切换按钮状态
+                        tabButtons.forEach(btn => {
+                            btn.classList.remove('active', 'text-blue-600', 'border-blue-600');
+                            btn.classList.add('text-gray-700', 'border-transparent');
+                        });
+                        button.classList.add('active', 'text-blue-600', 'border-blue-600');
+                        button.classList.remove('text-gray-700', 'border-transparent');
+
+                        // 切换内容显示
+                        tabContents.forEach(content => {
+                            content.classList.remove('active');
+                            if (content.id === targetTab + '-tab') {
+                                content.classList.add('active');
+                            }
+                        });
+                    });
+                });
+
+                // 默认激活第一个标签
+                if (tabButtons.length > 0) {
+                    tabButtons[0].classList.add('active', 'text-blue-600', 'border-blue-600');
+                    tabButtons[0].classList.remove('text-gray-700', 'border-transparent');
+                }
+
+                // 初始化配置
+                loadConfigurations();
+                initializeModels();
+                initializePrompts();
+
+                // 初始化供应商配置
+                updateProviderConfig();
+            }
+
+            // 显示通知
+            function showNotification(message, type = 'info', duration = 3000) {
+                const container = document.getElementById('notificationContainer');
+                const notification = document.createElement('div');
+
+                const colors = {
+                    success: 'bg-green-500',
+                    error: 'bg-red-500',
+                    warning: 'bg-yellow-500',
+                    info: 'bg-blue-500'
+                };
+
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    warning: 'fa-exclamation-triangle',
+                    info: 'fa-info-circle'
+                };
+
+                notification.className = `notification ${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2`;
+                notification.innerHTML = `
+                    <i class="fas ${icons[type]}"></i>
+                    <span>${message}</span>
+                `;
+
+                container.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.remove();
+                }, duration);
+            }
+
+            // 保存配置
+            function saveConfig() {
+                const apiKey = document.getElementById('apiKey').value;
+                const apiUrl = document.getElementById('apiUrl').value;
+
+                if (!apiKey || !apiUrl) {
+                    showNotification('请填写完整的配置信息', 'error');
+                    return;
+                }
+
+                // 保存到localStorage
+                localStorage.setItem('adminConfig', JSON.stringify({
+                    apiKey: apiKey,
+                    apiUrl: apiUrl,
+                    updatedAt: new Date().toISOString()
+                }));
+
+                showNotification('配置保存成功', 'success');
+            }
+
+            // 初始化模型配置
+            function initializeModels() {
+                const modelSelect = document.getElementById('modelName');
+                const models = {
+                    openai: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'],
+                    anthropic: ['claude-3-sonnet', 'claude-3-opus'],
+                    fastgpt: ['fastgpt-3.5', 'fastgpt-4'],
+                    custom: ['custom-model']
+                };
+
+                // 设置默认模型
+                updateProviderConfig();
+            }
+
+            // 默认角色数据
+            const defaultRoles = [
+                { id: 1, name: '心理支持', icon: 'fa-heart', description: '提供心理支持和安慰' },
+                { id: 2, name: '医疗咨询', icon: 'fa-stethoscope', description: '提供医疗健康建议' },
+                { id: 3, name: '生活陪伴', icon: 'fa-comments', description: '日常聊天和生活陪伴' }
+            ];
+
+            // 初始化提示词
+            function initializePrompts() {
+                const rolesList = document.getElementById('rolesList');
+
+                defaultRoles.forEach(role => {
+                    const roleItem = document.createElement('div');
+                    roleItem.className = 'role-item p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors';
+                    roleItem.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas ${role.icon} text-blue-500"></i>
+                            <div>
+                                <h4 class="font-medium">${role.name}</h4>
+                                <p class="text-sm text-gray-500">${role.description}</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
+                `;
+                    roleItem.onclick = () => editRole(role);
+                    rolesList.appendChild(roleItem);
+                });
+
+                // 同时初始化测试面板的角色选择框
+                initializeTestRoles();
+            }
+
+            // 初始化测试面板的角色选择框
+            function initializeTestRoles() {
+                const testRoleSelect = document.getElementById('testRole');
+                if (testRoleSelect) {
+                    // 清空现有选项（保留默认选项）
+                    testRoleSelect.innerHTML = '<option value="">选择测试角色</option>';
+
+                    // 添加角色选项
+                    defaultRoles.forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role.id;
+                        option.textContent = role.name;
+                        testRoleSelect.appendChild(option);
+                    });
+                }
+            }
+
+            // 加载配置
+            function loadConfigurations() {
+                const savedConfig = localStorage.getItem('adminConfig');
+                if (savedConfig) {
+                    const config = JSON.parse(savedConfig);
+                    document.getElementById('apiKey').value = config.apiKey || '';
+                    document.getElementById('baseUrl').value = config.baseUrl || '';
+                    document.getElementById('provider').value = config.provider || 'fastgpt';
+                    document.getElementById('modelName').value = config.modelName || '';
+                    document.getElementById('maxTokens').value = config.maxTokens || '1000';
+                    document.getElementById('temperature').value = config.temperature || '0.7';
+                    document.getElementById('ttsProvider').value = config.ttsProvider || 'browser';
+                    document.getElementById('voice').value = config.voice || '';
+                    document.getElementById('speechRate').value = config.speechRate || '1';
+                    document.getElementById('pitch').value = config.pitch || '1';
+                    document.getElementById('language').value = config.language || 'zh-CN';
+
+                    // 加载FastGPT特有配置
+                    if (document.getElementById('chatId')) {
+                        document.getElementById('chatId').value = config.chatId || '111';
+                    }
+
+                    // 加载自定义模型配置
+                    if (config.customModelName && document.getElementById('customModelName')) {
+                        document.getElementById('customModelName').value = config.customModelName;
+                    }
+                    if (config.customModelDesc && document.getElementById('customModelDesc')) {
+                        document.getElementById('customModelDesc').value = config.customModelDesc;
+                    }
+                    
+                    // 加载自定义TTS配置
+                    if (config.customTtsUrl && document.getElementById('customTtsUrl')) {
+                        document.getElementById('customTtsUrl').value = config.customTtsUrl;
+                    }
+                    if (config.customTtsKey && document.getElementById('customTtsKey')) {
+                        document.getElementById('customTtsKey').value = config.customTtsKey;
+                    }
+
+                    updateProviderConfig();
+                    updateTTSConfig();
+                }
+            }
+
+            // 切换标签页
+            function switchTab(tabName) {
+                const tabButtons = document.querySelectorAll('.tab-btn');
+                const tabContents = document.querySelectorAll('.tab-content');
+
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active', 'text-blue-600', 'border-blue-600');
+                    btn.classList.add('text-gray-700', 'border-transparent');
+                });
+
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+
+                const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
+                const activeContent = document.getElementById(`${tabName}-tab`);
+
+                if (activeButton) {
+                    activeButton.classList.add('active', 'text-blue-600', 'border-blue-600');
+                    activeButton.classList.remove('text-gray-700', 'border-transparent');
+                }
+
+                if (activeContent) {
+                    activeContent.classList.add('active');
+                }
+
+                // 如果切换到测试面板，重新初始化角色选择框
+                if (tabName === 'test') {
+                    initializeTestRoles();
+                }
+            }
+
+            // 选择供应商
+            function selectProvider(provider) {
+                document.getElementById('provider').value = provider;
+                updateProviderConfig();
+
+                // 更新供应商卡片状态
+                document.querySelectorAll('.provider-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+                document.querySelector(`[data-provider="${provider}"]`).classList.add('active');
+            }
+
+            // 更新供应商配置
+            function updateProviderConfig() {
+                const provider = document.getElementById('provider').value;
+                const modelSelect = document.getElementById('modelName');
+                const fastgptConfig = document.getElementById('fastgptConfig');
+                const customModelConfig = document.getElementById('customModelConfig');
+                const baseUrlInput = document.getElementById('baseUrl');
+
+                // 清空模型选项
+                modelSelect.innerHTML = '<option value="">选择模型</option>';
+
+                // 显示/隐藏特定配置
+                if (provider === 'fastgpt') {
+                    fastgptConfig.classList.remove('hidden');
+                    customModelConfig.classList.add('hidden');
+                } else if (provider === 'custom') {
+                    customModelConfig.classList.remove('hidden');
+                    fastgptConfig.classList.add('hidden');
+                } else {
+                    fastgptConfig.classList.add('hidden');
+                    customModelConfig.classList.add('hidden');
+                }
+
+                // 设置默认Base URL
+                const defaultUrls = {
+                    openai: 'https://api.openai.com/v1',
+                    anthropic: 'https://api.anthropic.com/v1',
+                    fastgpt: 'https://api.fastgpt.in/api/v1',
+                    custom: ''
+                };
+
+                // 如果当前baseUrl为空或者是其他供应商的默认URL，则设置新的默认URL
+                const currentBaseUrl = baseUrlInput.value.trim();
+                const isDefaultUrl = Object.values(defaultUrls).includes(currentBaseUrl);
+                
+                if (!currentBaseUrl || isDefaultUrl) {
+                    baseUrlInput.value = defaultUrls[provider] || '';
+                }
+
+                // 根据供应商添加默认模型选项（在用户点击刷新前显示）
+                const defaultModels = {
+                    openai: [
+                        { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
+                        { id: 'gpt-4', name: 'GPT-4' },
+                        { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' }
+                    ],
+                    anthropic: [
+                        { id: 'claude-3-sonnet-20240229', name: 'Claude 3 Sonnet' },
+                        { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
+                        { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' }
+                    ],
+                    fastgpt: [
+                        { id: 'fastgpt-app', name: 'FastGPT应用 (云端配置)' }
+                    ],
+                    custom: []
+                };
+
+                if (defaultModels[provider]) {
+                    defaultModels[provider].forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.id;
+                        option.textContent = model.name + ' (默认)';
+                        modelSelect.appendChild(option);
+                    });
+                }
+
+                // 如果Base URL为空，设置默认值
+                if (!baseUrlInput.value && defaultUrls[provider]) {
+                    baseUrlInput.value = defaultUrls[provider];
+                }
+
+                // 显示/隐藏FastGPT配置
+                if (provider === 'fastgpt') {
+                    fastgptConfig.classList.remove('hidden');
+                } else {
+                    fastgptConfig.classList.add('hidden');
+                }
+
+                // 显示/隐藏自定义模型配置
+                if (provider === 'custom') {
+                    customModelConfig.classList.remove('hidden');
+                    // 为自定义提供商添加常用模型
+                    const customModels = ['kimi2', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'custom-model'];
+                    customModels.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model;
+                        option.textContent = model;
+                        modelSelect.appendChild(option);
+                    });
+                } else {
+                    customModelConfig.classList.add('hidden');
+                }
+                
+                // 更新URL预览
+                updateUrlPreview();
+                
+                // 如果已经有API密钥，自动尝试获取模型列表
+                const apiKey = document.getElementById('apiKey').value;
+                if (apiKey && apiKey.trim() && provider !== 'custom') {
+                    // 延迟一点时间让UI更新完成
+                    setTimeout(() => {
+                        autoFetchModels();
+                    }, 500);
+                }
+            }
+            
+            // 自动获取模型列表（静默模式，不显示错误通知）
+            async function autoFetchModels() {
+                const provider = document.getElementById('provider').value;
+                const apiKey = document.getElementById('apiKey').value;
+                const baseUrl = document.getElementById('baseUrl').value;
+
+                if (!provider || !apiKey) return;
+
+                try {
+                    const params = new URLSearchParams({
+                        provider: provider,
+                        apiKey: apiKey || ''
+                    });
+
+                    if (baseUrl && baseUrl.trim()) {
+                        params.append('baseUrl', baseUrl.trim());
+                    }
+
+                    const response = await fetch(`/api/chat/models?${params.toString()}`);
+                    const data = await response.json();
+
+                    if (response.ok && data.models && data.models.length > 0) {
+                        // 静默更新模型列表，替换默认模型
+                        const modelSelect = document.getElementById('modelName');
+                        modelSelect.innerHTML = '<option value="">选择模型</option>';
+                        
+                        data.models.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model.id;
+                            option.textContent = model.name;
+                            option.title = model.description || model.name;
+                            modelSelect.appendChild(option);
+                        });
+                        
+                        console.log(`自动获取到 ${data.models.length} 个 ${provider} 模型`);
+                        
+                        // 显示一个小的成功提示
+                        showNotification(`已自动加载 ${data.models.length} 个可用模型`, 'success', 2000);
+                    }
+                } catch (error) {
+                    // 静默失败，不显示错误通知
+                    console.log('自动获取模型列表失败:', error.message);
+                }
+            }
+
+            // 获取可用模型列表
+            async function fetchAvailableModels() {
+                const provider = document.getElementById('provider').value;
+                const apiKey = document.getElementById('apiKey').value;
+                const baseUrl = document.getElementById('baseUrl').value;
+
+                // 验证必要参数
+                if (!provider) {
+                    showNotification('请先选择供应商', 'error');
+                    return;
+                }
+
+                if (!apiKey && provider !== 'anthropic') {
+                    showNotification('请先输入API密钥', 'error');
+                    return;
+                }
+
+                // 对于自定义供应商，需要baseUrl
+                if (provider === 'custom' && (!baseUrl || !baseUrl.trim())) {
+                    showNotification('自定义供应商需要提供Base URL', 'error');
+                    return;
+                }
+
+                const refreshBtn = document.getElementById('refreshModels');
+                const modelSelect = document.getElementById('modelName');
+                const originalText = refreshBtn.innerHTML;
+                
+                // 更新按钮状态
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                refreshBtn.disabled = true;
+                
+                // 显示加载状态
+                modelSelect.innerHTML = '<option value="">正在获取模型列表...</option>';
+
+                try {
+                    // 构建请求参数
+                    const params = new URLSearchParams({
+                        provider: provider,
+                        apiKey: apiKey || ''
+                    });
+
+                    // 如果有baseUrl，添加到参数中
+                    if (baseUrl && baseUrl.trim()) {
+                        params.append('baseUrl', baseUrl.trim());
+                    }
+
+                    console.log(`正在获取 ${provider} 的模型列表...`);
+
+                    // 调用后端API获取模型列表
+                    const response = await fetch(`/api/chat/models?${params.toString()}`);
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        // 如果是自定义API且有fallback模型，使用fallback
+                        if (data.fallback && data.models) {
+                            console.warn('使用fallback模型列表:', data.models);
+                            updateModelSelect(data.models, true);
+                            showNotification(`无法获取实时模型列表，已加载常用模型 (${data.models.length}个)`, 'warning');
+                            return;
+                        }
+                        throw new Error(data.error || '获取模型列表失败');
+                    }
+
+                    // 更新模型选择下拉框
+                    updateModelSelect(data.models);
+
+                    // 显示成功消息
+                    const successMsg = getSuccessMessage(provider, data.models.length);
+                    showNotification(successMsg, 'success');
+
+                } catch (error) {
+                    console.error('获取模型列表失败:', error);
+                    
+                    // 根据不同的错误类型显示不同的消息
+                    let errorMsg = '获取模型列表失败';
+                    if (error.message.includes('API密钥')) {
+                        errorMsg = 'API密钥无效，请检查配置';
+                    } else if (error.message.includes('网络')) {
+                        errorMsg = '网络连接失败，请检查网络设置';
+                    } else if (error.message.includes('超时')) {
+                        errorMsg = '请求超时，请稍后再试';
+                    } else {
+                        errorMsg = error.message || errorMsg;
+                    }
+                    
+                    showNotification(errorMsg, 'error');
+                    
+                    // 恢复默认选项
+                    modelSelect.innerHTML = '<option value="">选择模型</option>';
+                    
+                } finally {
+                    refreshBtn.innerHTML = originalText;
+                    refreshBtn.disabled = false;
+                }
+            }
+
+            // 更新模型选择下拉框
+            function updateModelSelect(models, isFallback = false) {
+                const modelSelect = document.getElementById('modelName');
+                modelSelect.innerHTML = '<option value="">选择模型</option>';
+
+                if (models && models.length > 0) {
+                    models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.id;
+                        option.textContent = model.name + (isFallback ? ' (常用)' : '');
+                        option.title = model.description || model.name;
+                        modelSelect.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = '暂无可用模型';
+                    option.disabled = true;
+                    modelSelect.appendChild(option);
+                }
+            }
+
+            // 获取成功消息
+            function getSuccessMessage(provider, count) {
+                const providerNames = {
+                    'openai': 'OpenAI',
+                    'anthropic': 'Anthropic',
+                    'fastgpt': 'FastGPT',
+                    'custom': '自定义API'
+                };
+                
+                const providerName = providerNames[provider] || provider;
+                return `成功从 ${providerName} 获取到 ${count} 个可用模型`;
+            }
+
+            // 更新TTS配置
+            function updateTTSConfig() {
+                const ttsProvider = document.getElementById('ttsProvider').value;
+                const customTtsConfig = document.getElementById('customTtsConfig');
+
+                if (ttsProvider === 'custom') {
+                    customTtsConfig.classList.remove('hidden');
+                } else {
+                    customTtsConfig.classList.add('hidden');
+                }
+            }
+
+            // 智能URL处理函数（与后端保持一致）
+            function normalizeApiUrl(baseUrl, endpoint) {
+                if (!baseUrl) return '';
+
+                // 移除末尾的斜杠
+                let cleanUrl = baseUrl.replace(/\/+$/, '');
+
+                // 常见API提供商的URL模式
+                const apiPatterns = {
+                    'api.openai.com': '/v1',
+                    'api.anthropic.com': '/v1',
+                    'api.siliconflow.cn': '/v1',
+                    'api.deepseek.com': '/v1',
+                    'dashscope.aliyuncs.com': '/compatible-mode/v1',
+                    'open.bigmodel.cn': '/api/paas/v4',
+                    'api.moonshot.cn': '/v1'
+                };
+
+                // 检查是否已经包含版本路径
+                const hasVersionPath = /\/(v1|v2|v3|v4|api\/v\d+|compatible-mode\/v\d+|api\/paas\/v\d+)$/i.test(cleanUrl);
+
+                // 如果没有版本路径，根据域名添加标准路径
+                if (!hasVersionPath) {
+                    for (const [domain, path] of Object.entries(apiPatterns)) {
+                        if (cleanUrl.includes(domain)) {
+                            cleanUrl += path;
+                            break;
+                        }
+                    }
+                    // 如果不是已知域名，默认添加/v1
+                    if (!hasVersionPath && !Object.keys(apiPatterns).some(domain => cleanUrl.includes(domain))) {
+                        cleanUrl += '/v1';
+                    }
+                }
+
+                // 添加端点
+                return `${cleanUrl}/${endpoint}`;
+            }
+
+            // 更新URL预览
+            function updateUrlPreview() {
+                const baseUrl = document.getElementById('baseUrl').value.trim();
+                const urlPreview = document.getElementById('urlPreview');
+                const chatUrl = document.getElementById('chatUrl');
+                const modelsUrl = document.getElementById('modelsUrl');
+
+                if (baseUrl) {
+                    // 生成预览URL
+                    const chatEndpoint = normalizeApiUrl(baseUrl, 'chat/completions');
+                    const modelsEndpoint = normalizeApiUrl(baseUrl, 'models');
+
+                    chatUrl.textContent = chatEndpoint;
+                    modelsUrl.textContent = modelsEndpoint;
+
+                    urlPreview.classList.remove('hidden');
+                } else {
+                    urlPreview.classList.add('hidden');
+                }
+            }
+
+            // 切换密码可见性
+            function togglePasswordVisibility(fieldId) {
+                const field = document.getElementById(fieldId);
+                const icon = field.nextElementSibling.querySelector('i');
+
+                if (field.type === 'password') {
+                    field.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    field.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            }
+
+            // 测试TTS
+            function testTTS() {
+                const testText = '你好，这是一个语音测试。';
+                const utterance = new SpeechSynthesisUtterance(testText);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+                showNotification('语音测试已开始', 'success');
+            }
+
+            // 保存所有配置
+            function saveAllConfigs() {
+                const config = {
+                    provider: document.getElementById('provider').value,
+                    apiKey: document.getElementById('apiKey').value,
+                    baseUrl: document.getElementById('baseUrl').value,
+                    modelName: document.getElementById('modelName').value,
+                    maxTokens: document.getElementById('maxTokens').value,
+                    temperature: document.getElementById('temperature').value,
+                    ttsProvider: document.getElementById('ttsProvider').value,
+                    voice: document.getElementById('voice').value,
+                    speechRate: document.getElementById('speechRate').value,
+                    pitch: document.getElementById('pitch').value,
+                    language: document.getElementById('language').value,
+                    // FastGPT特有配置
+                    chatId: document.getElementById('chatId')?.value || '111',
+                    // 自定义模型配置
+                    customModelName: document.getElementById('customModelName')?.value || '',
+                    customModelDesc: document.getElementById('customModelDesc')?.value || '',
+                    // 自定义TTS配置
+                    customTtsUrl: document.getElementById('customTtsUrl')?.value || '',
+                    customTtsKey: document.getElementById('customTtsKey')?.value || '',
+                    updatedAt: new Date().toISOString()
+                };
+
+                localStorage.setItem('adminConfig', JSON.stringify(config));
+                showNotification('配置保存成功', 'success');
+                
+                console.log('已保存配置:', config);
+            }
+
+            // 重置配置
+            function resetConfigs() {
+                if (confirm('确定要重置所有配置吗？')) {
+                    localStorage.removeItem('adminConfig');
+                    location.reload();
+                }
+            }
+
+            // 添加新角色
+            function addNewRole() {
+                const role = {
+                    id: Date.now(),
+                    name: '新角色',
+                    icon: 'fa-user',
+                    description: '新角色描述'
+                };
+                editRole(role);
+            }
+
+            // 编辑角色
+            function editRole(role) {
+                const roleEditor = document.getElementById('roleEditor');
+                roleEditor.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">角色名称</label>
+                        <input type="text" id="roleName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" value="${role.name}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">图标</label>
+                        <select id="roleIcon" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="fa-heart" ${role.icon === 'fa-heart' ? 'selected' : ''}>心形</option>
+                            <option value="fa-stethoscope" ${role.icon === 'fa-stethoscope' ? 'selected' : ''}>听诊器</option>
+                            <option value="fa-comments" ${role.icon === 'fa-comments' ? 'selected' : ''}>对话</option>
+                            <option value="fa-user" ${role.icon === 'fa-user' ? 'selected' : ''}>用户</option>
+                            <option value="fa-robot" ${role.icon === 'fa-robot' ? 'selected' : ''}>机器人</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">描述</label>
+                        <textarea id="roleDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">${role.description}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">系统提示词</label>
+                        <textarea id="rolePrompt" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent code-editor" placeholder="输入角色的人设和回复风格...">你是一个${role.name}，${role.description}。请用温暖、关怀的语调回复用户。</textarea>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors save-role-btn" data-role-id="${role.id}">
+                            <i class="fas fa-save mr-2"></i>保存
+                        </button>
+                        <button class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors cancel-edit-btn">
+                            <i class="fas fa-times mr-2"></i>取消
+                        </button>
+                    </div>
+                </div>
+            `;
+            }
+
+            // 保存角色
+            function saveRole(roleId) {
+                const name = document.getElementById('roleName').value;
+                const icon = document.getElementById('roleIcon').value;
+                const description = document.getElementById('roleDescription').value;
+                const prompt = document.getElementById('rolePrompt').value;
+
+                showNotification('角色保存成功', 'success');
+                cancelEdit();
+            }
+
+            // 取消编辑
+            function cancelEdit() {
+                const roleEditor = document.getElementById('roleEditor');
+                roleEditor.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-hand-pointer text-4xl mb-2"></i>
+                    <p>请选择一个角色进行编辑</p>
+                </div>
+            `;
+            }
+
+            // 运行测试
+            function runTest() {
+                const testRole = document.getElementById('testRole').value;
+                const testInput = document.getElementById('testInput').value;
+
+                if (!testRole || !testInput) {
+                    showNotification('请选择角色并输入测试消息', 'error');
+                    return;
+                }
+
+                const resultsContainer = document.getElementById('testResults');
+                resultsContainer.innerHTML = `
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin text-2xl text-blue-500 mb-2"></i>
+                    <p>正在测试...</p>
+                </div>
+            `;
+
+                // 模拟测试
+                setTimeout(() => {
+                    resultsContainer.innerHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center p-2 bg-green-50 rounded">
+                            <span class="text-sm">API连接</span>
+                            <i class="fas fa-check text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-green-50 rounded">
+                            <span class="text-sm">语音识别</span>
+                            <i class="fas fa-check text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-green-50 rounded">
+                            <span class="text-sm">AI回复</span>
+                            <i class="fas fa-check text-green-500"></i>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-green-50 rounded">
+                            <span class="text-sm">语音合成</span>
+                            <i class="fas fa-check text-green-500"></i>
+                        </div>
+                    </div>
+                `;
+
+                    showNotification('测试完成，所有功能正常', 'success');
+                }, 2000);
+            }
+
+            // 更新温度值显示
+            function updateTemperatureValue(value) {
+                document.getElementById('temperatureValue').textContent = value;
+            }
+
+            // 更新语速值显示
+            function updateSpeechRateValue(value) {
+                document.getElementById('speechRateValue').textContent = value + 'x';
+            }
+
+            // 更新音调值显示
+            function updatePitchValue(value) {
+                const pitchText = value < 0.8 ? '低' : value > 1.2 ? '高' : '正常';
+                document.getElementById('pitchValue').textContent = pitchText;
+            }
+
+            // 退出登录
+            function logout() {
+                sessionStorage.removeItem('isAdminLoggedIn');
+                sessionStorage.removeItem('adminUsername');
+                showNotification('已退出登录', 'info');
+                setTimeout(() => {
+                    window.location.href = 'admin-login.html';
+                }, 1000);
+            }
+        </script>
+</body>
+
+</html>

@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小馨宝-语音助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // CDN备用方案
+        if (typeof tailwind === 'undefined') {
+            document.write('\u003clink rel="stylesheet" href="https://unpkg.com/tailwindcss@2.2.19/dist/tailwind.min.css">');
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        .recording {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        /* 防止按钮在按下时发生位移 */
+        .voice-button {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            outline: none;
+            border: none;
+            transform: translateZ(0);
+            /* 硬件加速，防止位移 */
+        }
+
+        .voice-button:active {
+            transform: translateZ(0) scale(0.98);
+            /* 轻微缩放反馈，但不位移 */
+        }
+
+        .voice-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        .voice-wave {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            height: 30px;
+        }
+
+        .voice-bar {
+            width: 4px;
+            background: #3b82f6;
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+
+        .voice-bar:nth-child(1) {
+            animation-delay: 0s;
+            height: 10px;
+        }
+
+        .voice-bar:nth-child(2) {
+            animation-delay: 0.1s;
+            height: 20px;
+        }
+
+        .voice-bar:nth-child(3) {
+            animation-delay: 0.2s;
+            height: 15px;
+        }
+
+        .voice-bar:nth-child(4) {
+            animation-delay: 0.3s;
+            height: 25px;
+        }
+
+        .voice-bar:nth-child(5) {
+            animation-delay: 0.4s;
+            height: 18px;
+        }
+
+        @keyframes wave {
+
+            0%,
+            100% {
+                transform: scaleY(1);
+            }
+
+            50% {
+                transform: scaleY(1.5);
+            }
+        }
+
+        .message-bubble {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto max-w-4xl p-4">
+        <!-- 头部 -->
+        <header class="text-center py-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-microphone-alt text-blue-500 mr-2"></i>
+                AI语音助手
+            </h1>
+            <p class="text-gray-600">按住麦克风说话，松开自动发送</p>
+        </header>
+
+        <!-- 主要内容区 -->
+        <main class="bg-white rounded-2xl shadow-lg p-6">
+            <!-- 对话区域 -->
+            <div id="chatContainer" class="h-96 overflow-y-auto mb-6 space-y-4 p-4 bg-gray-50 rounded-lg">
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-comments text-6xl mb-4 text-gray-300"></i>
+                    <p>开始你的语音对话吧！</p>
+                </div>
+            </div>
+
+            <!-- 控制区域 -->
+            <div class="flex flex-col items-center justify-center space-y-4">
+                <!-- 按钮区域 - 固定布局，防止位移 -->
+                <div class="relative flex items-center justify-center">
+                    <!-- 左侧占位区域 -->
+                    <div class="w-16 flex justify-center">
+                        <!-- 状态指示器 - 固定位置 -->
+                        <div id="statusIndicator" class="opacity-0 transition-opacity duration-200">
+                            <div class="voice-wave">
+                                <div class="voice-bar"></div>
+                                <div class="voice-bar"></div>
+                                <div class="voice-bar"></div>
+                                <div class="voice-bar"></div>
+                                <div class="voice-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 中央语音按钮 -->
+                    <div class="mx-4">
+                        <button id="voiceBtn"
+                            class="voice-button relative w-20 h-20 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-colors duration-200 shadow-lg">
+                            <i class="fas fa-microphone text-2xl"></i>
+                        </button>
+                        <!-- 按钮说明文字 -->
+                        <div class="text-center mt-2">
+                            <span class="text-sm text-gray-500">按住聊天</span>
+                        </div>
+                    </div>
+
+                    <!-- 右侧新会话按钮 -->
+                    <div class="w-16 flex justify-center">
+                        <button id="newSessionBtn"
+                            class="w-12 h-12 bg-gray-500 hover:bg-gray-600 text-white rounded-full flex items-center justify-center transition-colors duration-200 shadow-md"
+                            title="开始新会话">
+                            <i class="fas fa-plus text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 状态文本 -->
+                <div id="statusText" class="text-gray-600 font-medium text-center min-h-[24px]"></div>
+            </div>
+
+            <!-- 音量指示器 -->
+            <div class="mt-4">
+                <div class="bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div id="volumeBar" class="bg-blue-500 h-full transition-all duration-100" style="width: 0%"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 功能说明 -->
+        <footer class="mt-8 text-center text-gray-600">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <i class="fas fa-microphone text-blue-500 text-2xl mb-2"></i>
+                    <h3 class="font-semibold">语音输入</h3>
+                    <p class="text-sm">按住麦克风说话，松开自动发送</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <i class="fas fa-brain text-green-500 text-2xl mb-2"></i>
+                    <h3 class="font-semibold">AI理解</h3>
+                    <p class="text-sm">大语言模型分析理解</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <i class="fas fa-volume-up text-purple-500 text-2xl mb-2"></i>
+                    <h3 class="font-semibold">语音回复</h3>
+                    <p class="text-sm">自动生成语音回答</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let recognition = null;
+        let isRecording = false;
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let animationId = null;
+        let finalTranscript = ''; // 存储最终的语音识别结果
+        let currentChatId = null; // 当前会话的 Chat ID
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            checkUserAgreement();
+            initializeChatSession();
+        });
+
+        // 检查用户协议
+        function checkUserAgreement() {
+            const hasAgreed = localStorage.getItem('userAgreed');
+            if (!hasAgreed) {
+                showUserAgreement();
+            } else {
+                initializeSpeechRecognition();
+                setupEventListeners();
+            }
+        }
+
+        // 显示用户协议
+        function showUserAgreement() {
+            const agreementModal = document.createElement('div');
+            agreementModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            agreementModal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md mx-4 max-h-96 overflow-y-auto">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-file-contract text-4xl text-blue-500 mb-2"></i>
+                        <h2 class="text-xl font-bold text-gray-800">用户协议</h2>
+                    </div>
+                    
+                    <div class="text-sm text-gray-600 mb-6 space-y-3">
+                        <p><strong>小馨宝语音助手用户协议</strong></p>
+                        <p>欢迎使用小馨宝语音助手！在使用本服务前，请仔细阅读以下条款：</p>
+                        
+                        <div class="space-y-2">
+                            <p><strong>1. 服务说明</strong></p>
+                            <p>本服务为面向肿瘤患者和罕见病患者的公益心理支持工具，提供AI语音对话功能。</p>
+                            
+                            <p><strong>2. 隐私保护</strong></p>
+                            <p>我们严格保护用户隐私，对话内容仅用于提供服务，不会向第三方泄露。</p>
+                            
+                            <p><strong>3. 免责声明</strong></p>
+                            <p>本服务提供的AI回复不能替代专业医疗建议，如有健康问题请咨询专业医生。</p>
+                            
+                            <p><strong>4. 使用限制</strong></p>
+                            <p>请勿将本服务用于非法用途或传播有害信息。</p>
+                        </div>
+                        
+                        <div class="flex items-center space-x-2 mt-4">
+                            <input type="checkbox" id="agreeCheckbox" class="rounded">
+                            <label for="agreeCheckbox" class="text-sm">我已阅读并同意以上条款</label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button onclick="agreeToTerms()" id="agreeBtn" disabled class="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed">
+                            同意并继续
+                        </button>
+                        <button onclick="disagreeToTerms()" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg">
+                            不同意
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(agreementModal);
+
+            // 绑定复选框事件
+            document.getElementById('agreeCheckbox').addEventListener('change', (e) => {
+                document.getElementById('agreeBtn').disabled = !e.target.checked;
+            });
+        }
+
+        // 同意协议
+        function agreeToTerms() {
+            localStorage.setItem('userAgreed', 'true');
+            const modal = document.querySelector('.fixed.inset-0');
+            if (modal) {
+                modal.remove();
+            }
+            initializeSpeechRecognition();
+            setupEventListeners();
+        }
+
+        // 初始化聊天会话
+        function initializeChatSession() {
+            // 生成新的 Chat ID
+            currentChatId = generateUniqueChatId();
+            console.log('新会话 Chat ID:', currentChatId);
+
+            // 可选：显示会话信息
+            updateSessionInfo();
+        }
+
+        // 生成唯一的 Chat ID
+        function generateUniqueChatId() {
+            // 使用时间戳 + 随机数 + 用户标识生成唯一ID
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 15);
+            const userHash = getUserHash();
+
+            // 格式：时间戳_随机字符串_用户哈希前6位
+            return `${timestamp}_${random}_${userHash}`;
+        }
+
+        // 获取用户标识哈希（基于浏览器指纹）
+        function getUserHash() {
+            // 使用浏览器特征生成用户标识
+            const fingerprint = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width + 'x' + screen.height,
+                new Date().getTimezoneOffset(),
+                navigator.platform
+            ].join('|');
+
+            // 简单哈希函数
+            let hash = 0;
+            for (let i = 0; i < fingerprint.length; i++) {
+                const char = fingerprint.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // 转换为32位整数
+            }
+
+            return Math.abs(hash).toString(36).substring(0, 6);
+        }
+
+        // 更新会话信息显示
+        function updateSessionInfo() {
+            // 在控制台显示会话信息，也可以选择在UI中显示
+            console.log('当前会话信息:', {
+                chatId: currentChatId,
+                timestamp: new Date().toLocaleString(),
+                userHash: getUserHash()
+            });
+        }
+
+        // 开始新会话
+        function startNewSession() {
+            // 清空聊天记录
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <i class="fas fa-comments text-6xl mb-4 text-gray-300"></i>
+                    <p>开始你的语音对话吧！</p>
+                </div>
+            `;
+
+            // 生成新的 Chat ID
+            initializeChatSession();
+
+            // 显示新会话提示
+            showNotification('已开始新会话', 'success');
+        }
+
+        // 验证 Chat ID 唯一性（可选功能）
+        async function validateChatIdUniqueness(chatId) {
+            try {
+                // 这里可以调用后端API验证ID是否已存在
+                const response = await fetch('/api/chat/validate-id', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ chatId })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.isUnique;
+                }
+            } catch (error) {
+                console.log('无法验证Chat ID唯一性，使用本地生成的ID');
+            }
+
+            // 如果验证失败，假设ID是唯一的
+            return true;
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg text-white transition-all duration-300 ${type === 'success' ? 'bg-green-500' :
+                type === 'warning' ? 'bg-yellow-500' :
+                    type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                }`;
+
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' :
+                    type === 'warning' ? 'fa-exclamation-triangle' :
+                        type === 'error' ? 'fa-times-circle' : 'fa-info-circle'
+                } mr-2"></i>
+                    ${message}
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            // 自动移除通知
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // 不同意协议
+        function disagreeToTerms() {
+            alert('您需要同意用户协议才能使用本服务');
+            // 可以选择跳转到其他页面或关闭窗口
+            // window.location.href = 'about:blank';
+        }
+
+        // 初始化语音识别
+        function initializeSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'zh-CN';
+                recognition.continuous = false;
+                recognition.interimResults = true;
+
+                recognition.onstart = () => {
+                    console.log('语音识别开始');
+                    updateRecordingUI(true);
+                };
+
+                recognition.onresult = (event) => {
+                    let interimTranscript = '';
+                    finalTranscript = '';
+
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+
+                    const displayText = finalTranscript + interimTranscript;
+                    document.getElementById('statusText').textContent = `识别中: ${displayText}`;
+                };
+
+                recognition.onend = () => {
+                    console.log('语音识别结束');
+                    updateRecordingUI(false);
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('语音识别错误:', event.error);
+                    updateRecordingUI(false);
+                    showError('语音识别出错，请重试');
+                };
+            } else {
+                showError('您的浏览器不支持语音识别功能');
+            }
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            const newSessionBtn = document.getElementById('newSessionBtn');
+
+            // 语音按钮事件
+            // 鼠标事件
+            voiceBtn.addEventListener('mousedown', startRecording);
+            voiceBtn.addEventListener('mouseup', stopRecording);
+            voiceBtn.addEventListener('mouseleave', stopRecording); // 鼠标离开按钮时也停止录音
+
+            // 触摸事件（移动端支持）
+            voiceBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // 防止触发点击事件
+                startRecording();
+            });
+            voiceBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                stopRecording();
+            });
+            voiceBtn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                stopRecording();
+            });
+
+            // 防止默认的点击事件
+            voiceBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+            });
+
+            // 新会话按钮事件
+            if (newSessionBtn) {
+                newSessionBtn.addEventListener('click', startNewSession);
+            }
+        }
+
+        // 切换录音状态
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        // 开始录音
+        async function startRecording() {
+            try {
+                // 请求麦克风权限
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                // 设置音频分析
+                setupAudioAnalysis(stream);
+
+                // 开始语音识别
+                recognition.start();
+                isRecording = true;
+
+                // 更新UI
+                document.getElementById('voiceBtn').classList.add('recording');
+                document.getElementById('statusIndicator').classList.remove('hidden');
+                document.getElementById('statusText').textContent = '正在聆听...';
+
+            } catch (error) {
+                console.error('无法访问麦克风:', error);
+                showError('无法访问麦克风，请检查权限设置');
+            }
+        }
+
+        // 停止录音
+        function stopRecording() {
+            if (!isRecording) return; // 防止重复调用
+
+            if (recognition) {
+                recognition.stop();
+            }
+
+            if (microphone) {
+                microphone.disconnect();
+                microphone = null;
+            }
+
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            isRecording = false;
+
+            // 更新UI
+            updateRecordingUI(false);
+            document.getElementById('volumeBar').style.width = '0%';
+            document.getElementById('statusText').textContent = '正在处理语音...';
+
+            // 等待语音识别完成并处理结果
+            setTimeout(() => {
+                // 优先使用finalTranscript，如果没有则从状态文本中提取
+                let userMessage = finalTranscript;
+
+                if (!userMessage) {
+                    const statusText = document.getElementById('statusText').textContent;
+                    if (statusText && statusText.includes('识别中:')) {
+                        userMessage = statusText.replace('识别中: ', '').trim();
+                    }
+                }
+
+                if (userMessage && userMessage.trim()) {
+                    processUserMessage(userMessage.trim());
+                } else {
+                    document.getElementById('statusText').textContent = '未识别到语音，请重试';
+                    setTimeout(() => {
+                        document.getElementById('statusText').textContent = '';
+                    }, 2000);
+                }
+
+                // 重置变量
+                finalTranscript = '';
+            }, 800); // 给语音识别更多时间完成
+        }
+
+        // 设置音频分析
+        function setupAudioAnalysis(stream) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            microphone = audioContext.createMediaStreamSource(stream);
+
+            microphone.connect(analyser);
+            analyser.fftSize = 256;
+
+            visualizeAudio();
+        }
+
+        // 可视化音频
+        function visualizeAudio() {
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                animationId = requestAnimationFrame(draw);
+
+                analyser.getByteFrequencyData(dataArray);
+
+                // 计算平均音量
+                let sum = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    sum += dataArray[i];
+                }
+                const average = sum / bufferLength;
+                const volume = Math.min(100, (average / 128) * 100);
+
+                document.getElementById('volumeBar').style.width = `${volume}%`;
+            }
+
+            draw();
+        }
+
+        // 处理用户消息
+        async function processUserMessage(message) {
+            // 显示用户消息
+            addMessageToChat('user', message);
+
+            // 显示加载状态
+            document.getElementById('statusText').textContent = 'AI正在思考...';
+
+            try {
+                // 获取配置
+                const savedConfig = localStorage.getItem('adminConfig');
+                const config = savedConfig ? JSON.parse(savedConfig) : {};
+
+                console.log('使用的配置:', config);
+
+                // 构建请求体
+                const requestBody = {
+                    message,
+                    provider: config.provider || 'fastgpt',
+                    model: config.modelName || 'fastgpt-3.5'
+                };
+
+                // 根据不同的供应商添加特定参数
+                if (config.provider === 'fastgpt' || !config.provider) {
+                    // FastGPT特有参数
+                    requestBody.apiKey = config.apiKey;
+                    requestBody.baseUrl = config.baseUrl;
+                    requestBody.chatId = currentChatId || generateUniqueChatId(); // 使用动态生成的chatId
+                } else if (config.provider === 'custom') {
+                    // 自定义API参数
+                    requestBody.apiKey = config.apiKey;
+                    requestBody.baseUrl = config.baseUrl;
+                } else if (config.provider === 'openai') {
+                    // OpenAI参数
+                    requestBody.apiKey = config.apiKey;
+                    requestBody.baseUrl = config.baseUrl;
+                } else if (config.provider === 'anthropic') {
+                    // Anthropic参数
+                    requestBody.apiKey = config.apiKey;
+                    requestBody.baseUrl = config.baseUrl;
+                }
+
+                console.log('发送的请求体:', requestBody);
+
+                const response = await fetch('/api/chat/completion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    console.error('API响应错误:', data);
+                    throw new Error(data.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const aiResponse = data.response || '抱歉，我现在无法回复您。';
+
+                // 显示AI回复
+                addMessageToChat('ai', aiResponse);
+
+                // 播放语音回复
+                await playTextToSpeech(aiResponse);
+
+            } catch (error) {
+                console.error('API调用错误:', error);
+
+                // 根据错误类型显示不同的错误消息
+                let errorMessage = '抱歉，服务暂时不可用，请稍后再试。';
+
+                if (error.message.includes('API密钥')) {
+                    errorMessage = '请先在管理面板中配置API密钥。';
+                } else if (error.message.includes('401')) {
+                    errorMessage = 'API密钥无效，请检查配置。';
+                } else if (error.message.includes('429')) {
+                    errorMessage = '请求过于频繁，请稍后再试。';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = '请求超时，请检查网络连接。';
+                }
+
+                addMessageToChat('ai', errorMessage);
+                showError(errorMessage);
+            } finally {
+                document.getElementById('statusText').textContent = '';
+            }
+        }
+
+        // 注意：此函数已被真实的API调用替代，保留作为备份
+        // async function simulateBackendCall(message) { ... }
+
+        // 文本转语音
+        async function playTextToSpeech(text) {
+            return new Promise((resolve, reject) => {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1;
+
+                    utterance.onend = () => {
+                        resolve();
+                    };
+
+                    utterance.onerror = (error) => {
+                        console.error('语音合成错误:', error);
+                        reject(error);
+                    };
+
+                    speechSynthesis.speak(utterance);
+
+                    // 显示正在播放状态
+                    document.getElementById('statusText').textContent = '正在播放回复...';
+                    utterance.onend = () => {
+                        document.getElementById('statusText').textContent = '';
+                        resolve();
+                    };
+                } else {
+                    reject(new Error('浏览器不支持语音合成'));
+                }
+            });
+        }
+
+        // 添加消息到聊天区域
+        function addMessageToChat(sender, text) {
+            const chatContainer = document.getElementById('chatContainer');
+
+            // 清除初始提示
+            if (chatContainer.children.length === 1 && chatContainer.children[0].classList.contains('text-center')) {
+                chatContainer.innerHTML = '';
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message-bubble flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = `max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${sender === 'user'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-800'
+                }`;
+
+            const icon = document.createElement('i');
+            icon.className = `fas ${sender === 'user' ? 'fa-user' : 'fa-robot'} mr-2`;
+
+            bubbleDiv.innerHTML = `<i class="fas ${sender === 'user' ? 'fa-user' : 'fa-robot'} mr-2"></i>${text}`;
+            messageDiv.appendChild(bubbleDiv);
+            chatContainer.appendChild(messageDiv);
+
+            // 滚动到底部
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 更新录音UI
+        function updateRecordingUI(recording) {
+            const voiceBtn = document.getElementById('voiceBtn');
+            const statusIndicator = document.getElementById('statusIndicator');
+
+            if (recording) {
+                voiceBtn.classList.add('recording', 'bg-red-500');
+                voiceBtn.classList.remove('bg-blue-500');
+                voiceBtn.innerHTML = '<i class="fas fa-stop text-2xl"></i>';
+                statusIndicator.classList.remove('opacity-0');
+                statusIndicator.classList.add('opacity-100');
+            } else {
+                voiceBtn.classList.remove('recording', 'bg-red-500');
+                voiceBtn.classList.add('bg-blue-500');
+                voiceBtn.innerHTML = '<i class="fas fa-microphone text-2xl"></i>';
+                statusIndicator.classList.remove('opacity-100');
+                statusIndicator.classList.add('opacity-0');
+            }
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const chatContainer = document.getElementById('chatContainer');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'message-bubble bg-red-100 text-red-700 px-4 py-2 rounded-lg text-center';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i>${message}`;
+            chatContainer.appendChild(errorDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // 3秒后自动移除错误信息
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>

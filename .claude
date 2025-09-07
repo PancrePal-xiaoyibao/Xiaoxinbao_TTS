@@ -1,0 +1,95 @@
+# 项目记忆文件 - 小新宝AI语音助手
+
+## 项目概述
+**项目名称**: 小新宝AI语音助手 (Xiaoxinbao AI Voice Assistant)  
+**版本**: 1.0.0  
+**目标用户**: 癌症患者心理支持  
+**技术栈**: Node.js + Express + FastGPT API + Web Speech API  
+
+## 当前项目状态
+- **后端完成度**: ~70% (Express服务器、认证、聊天、TTS API已完成)
+- **前端完成度**: ~50% (HTML结构完成，JavaScript交互逻辑缺失)
+- **整体进度**: MVP阶段，需要完成前端交互和配置管理
+
+## 核心架构
+### 后端架构
+- **服务器**: Express.js + 安全中间件 (Helmet, CORS, compression)
+- **认证**: JWT + bcrypt，文件型管理员配置
+- **AI集成**: FastGPT API用于心理支持对话
+- **TTS服务**: 支持微软/谷歌/百度/腾讯四大语音合成平台
+- **配置管理**: 环境变量 + dotenv
+
+### 前端架构
+- **主界面**: index.html (语音聊天界面)
+- **语音技术**: Web Speech API (语音识别 + 合成)
+- **交互设计**: 麦克风按钮 + 聊天消息区域 + 语音状态指示器
+
+## 关键文件结构
+```
+E:\Development\Xiaoxinbao-TTS2\
+├── package.json                 # 项目依赖和脚本
+├── task.md                      # 任务管理文件
+├── index.html                   # 主用户界面
+├── app.js                       # 备用服务器入口
+├── src\
+│   ├── app.js                   # 主Express服务器
+│   ├── routes\
+│   │   ├── auth.js              # 管理员认证
+│   │   ├── chat.js              # FastGPT聊天API
+│   │   └── tts.js               # TTS语音合成API
+│   └── config\
+│       └── admin.json           # 管理员配置
+└── public\
+    └── css\
+        └── style.css            # 样式文件
+```
+
+## 已完成功能
+✅ **Phase 1**: 项目初始化和基础架构  
+✅ **Phase 2**: 后端API开发 (认证、聊天、TTS)  
+⚠️ **Phase 3**: 前端界面开发 (HTML完成，JavaScript缺失)  
+
+## 缺失功能
+❌ **前端JavaScript逻辑**: 语音交互、聊天管理、状态处理  
+❌ **配置管理API**: src/routes/config.js  
+❌ **测试框架**: 单元测试和集成测试  
+❌ **部署配置**: 生产环境设置  
+
+## 技术债务
+1. **前端交互逻辑**: 需要实现完整的语音聊天功能
+2. **错误处理**: 前端错误处理和用户反馈机制
+3. **配置系统**: 动态配置管理API
+4. **安全性**: 生产环境安全配置优化
+5. **性能**: 前端资源优化和缓存策略
+
+## 开发注意事项
+1. **用户体验**: 面向癌症患者，界面需要简洁友好
+2. **语音质量**: TTS合成质量直接影响用户体验
+3. **响应速度**: FastGPT API调用需要优化超时处理
+4. **错误恢复**: 语音识别失败时的降级处理
+5. **隐私保护**: 用户对话数据的安全存储
+
+## 环境配置要求
+```env
+PORT=3000
+FASTGPT_BASE_URL=https://api.fastgpt.run
+FASTGPT_API_KEY=your_api_key_here
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your_password_here
+JWT_SECRET=your_jwt_secret_here
+```
+
+## API端点
+- `POST /api/auth/login` - 管理员登录
+- `POST /api/chat/message` - 发送消息给FastGPT
+- `POST /api/tts/synthesize` - 语音合成
+- `GET /api/tts/providers` - 获取TTS提供商列表
+- `POST /api/tts/config` - 配置TTS设置
+
+## 下一步开发重点
+1. **P0**: 完成前端JavaScript语音交互逻辑
+2. **P1**: 实现配置管理API
+3. **P2**: 添加测试覆盖和部署配置
+
+## 最后更新时间
+2025-07-29 - 项目分析完成，进入MVP完善阶段
